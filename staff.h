@@ -2,18 +2,15 @@
 #define STAFF_H
 
 struct staff {
-    char name[100];
     int id;
+    char name[100];
     char department[100];
-    char position[50];
+    char position[100]; // Add position field
     struct staff* next;
 };
 
 // Function prototypes
-struct staff* add_staff(struct staff* head, const char* name, int id, const char* dept, const char* position);
+struct staff* add_staff(struct staff* head, const char* name, int id, const char* department, const char* position);
 void view_staff(struct staff* head);
-
-void save_staff_to_file(struct staff* head, const char* filename);
-struct staff* load_staff_from_file(const char* filename);
 
 #endif

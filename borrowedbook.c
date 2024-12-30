@@ -1,105 +1,102 @@
+// borrowedbook.c (or any other .c file)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// Include necessary headers
 #include "borrowedbook.h"
+#include "returnedbook.h"
+#include "staff.h"
+#include "student.h"
+#include "sortbyauthor.h"
+#include "sortbybookname.h"
+#include "filehanding.h"
 
-// Global head pointer for the borrowed books linked list
-struct borrowedbook* borrowed_books_head = NULL;
+// Declare global variables using extern
+extern struct borrowedbook* borrowed_books_head;
+extern struct returnedbook* returned_books_head;
+extern struct staff* staff_head;
+extern struct student* student_head;
+extern struct sortbyauthor* author_head;
+extern struct sortbybookname* book_name_head;
 
-// Create a new borrowed book node
-struct borrowedbook* create_borrowed_book(const char* student_name, const char* usn, const char* book_name, const char* borrowed_date) {
+extern int books_count;
+extern int students_count;
+extern int staff_count;
+extern int borrowed_count;
+extern int returned_count;
+
+
+struct borrowedbook* add_borrowed_book(struct borrowedbook* head, int student_id, int book_id) {
+    struct borrowedbook* new_node = (struct borrowedbook*)malloc(sizeof(struct borrowedbook));
+    if (!new_node) {
+        printf("Memory allocation failed for borrowed book.\n");
+        return head;
+    }
+
+    new_node->student_id = student_id;
+    new_node->book_id = book_id;
+    new_node->next = head;
+    head = new_node;
+    return head;
+}
+// Function to record a borrowed book
+int record_borrowed_book(void) {
+    // Allocate memory for the new borrowed book record
     struct borrowedbook* new_borrowed_book = (struct borrowedbook*)malloc(sizeof(struct borrowedbook));
-    if (!new_borrowed_book) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
+    if (new_borrowed_book == NULL) {
+        printf("Memory allocation failed.\n");
+        return -1; // Return error code
     }
-    strncpy(new_borrowed_book->student_name, student_name, sizeof(new_borrowed_book->student_name) - 1);
-    new_borrowed_book->student_name[sizeof(new_borrowed_book->student_name) - 1] = '\0';
-    strncpy(new_borrowed_book->usn, usn, sizeof(new_borrowed_book->usn) - 1);
-    new_borrowed_book->usn[sizeof(new_borrowed_book->usn) - 1] = '\0';
-    strncpy(new_borrowed_book->book_name, book_name, sizeof(new_borrowed_book->book_name) - 1);
-    new_borrowed_book->book_name[sizeof(new_borrowed_book->book_name) - 1] = '\0';
-    strncpy(new_borrowed_book->borrowed_date, borrowed_date, sizeof(new_borrowed_book->borrowed_date) - 1);
-    new_borrowed_book->borrowed_date[sizeof(new_borrowed_book->borrowed_date) - 1] = '\0';
-    new_borrowed_book->next = NULL;
-    return new_borrowed_book;
-}
-void display_borrowed_books_menu() {
-    printf("Borrowed Books Menu:\n");
-    printf("1. View Borrowed Books\n");
-    printf("2. Add Borrowed Book\n");
-    printf("3. Remove Borrowed Book\n");
-    printf("4. Return to Main Menu\n");
-}
-void manage_borrowed_books() {
-    printf("Managing Borrowed Books...\n");
 
-}
-
-
-int record_borrowed_book() {
-    char student_name[50], usn[50], book_name[50], borrowed_date[20];
-
+    // Prompt user for details about the borrowed book
     printf("Enter student name: ");
-    scanf(" %[^\n]", student_name);
-    printf("Enter student USN: ");
-    scanf(" %[^\n]", usn);
-    printf("Enter book name: ");
-    scanf(" %[^\n]", book_name);
-    printf("Enter borrowed date (DD/MM/YYYY): ");
-    scanf(" %[^\n]", borrowed_date);
+    scanf(" %[^\n]", new_borrowed_book->student_name);
 
-    struct borrowedbook* new_borrowed_book = create_borrowed_book(student_name, usn, book_name, borrowed_date);
-    if (!new_borrowed_book) {
-        return 0;
+    printf("Enter book name: ");
+    scanf(" %[^\n]", new_borrowed_book->book_name);
+
+    printf("Enter borrowed date (YYYY-MM-DD): ");
+    scanf(" %[^\n]", new_borrowed_book->borrowed_date);
+
+    printf("Enter student ID: ");
+    scanf("%d", &new_borrowed_book->borrowed_by_student_id);
+
+    // Initialize the next pointer
+    new_borrowed_book->next = NULL;
+
+    // Add the new record to the linked list
+    if (borrowed_books_head == NULL) {
+        borrowed_books_head = new_borrowed_book;
+    } else {
+        struct borrowedbook* current = borrowed_books_head;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_borrowed_book;
     }
 
-    new_borrowed_book->next = borrowed_books_head;
-    borrowed_books_head = new_borrowed_book;
-
-    printf("Borrowed book record added successfully!\n");
-    return 1;
+    printf("Borrowed book recorded successfully.\n");
+    return 0; // Return success code
 }
 
-void save_borrowed_books_to_file() {
-    FILE* file = fopen("borrowed_books_data.txt", "wb");
-    if (!file) {
-        fprintf(stderr, "Error opening file for writing\n");
+// Optional: Function to view all borrowed books
+void view_borrowed_books(void) {
+    if (borrowed_books_head == NULL) {
+        printf("No borrowed books recorded.\n");
         return;
     }
 
+    printf("Borrowed Books:\n");
     struct borrowedbook* current = borrowed_books_head;
-    while (current) {
-        fwrite(current, sizeof(struct borrowedbook), 1, file);
+    while (current != NULL) {
+        printf("Student Name: %s\n", current->student_name);
+        printf("Book Name: %s\n", current->book_name);
+        printf("Borrowed Date: %s\n", current->borrowed_date);
+        printf("Student ID: %d\n", current->borrowed_by_student_id);
+        printf("\n");
         current = current->next;
     }
-
-    fclose(file);
-    printf("Borrowed books saved successfully.\n");
 }
 
-void load_borrowed_books_from_file() {
-    FILE* file = fopen("borrowed_books_data.txt", "rb");
-    if (!file) {
-        fprintf(stderr, "Error opening file for reading\n");
-        return;
-    }
-
-    struct borrowedbook temp;
-    struct borrowedbook* last = NULL;
-
-    while (fread(&temp, sizeof(struct borrowedbook), 1, file) == 1) {
-        struct borrowedbook* new_borrowed_book = create_borrowed_book(
-            temp.student_name, temp.usn, temp.book_name, temp.borrowed_date);
-
-        if (!borrowed_books_head) {
-            borrowed_books_head = new_borrowed_book;
-        } else {
-            last->next = new_borrowed_book;
-        }
-        last = new_borrowed_book;
-    }
-
-    fclose(file);
-    printf("Borrowed books loaded successfully.\n");
-}

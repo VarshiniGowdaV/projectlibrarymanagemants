@@ -3,12 +3,12 @@
 #include <string.h>
 #include "sortbyauthor.h"
 
-
-struct sortbyauthor* create_author_node(const char* author_name) {
+struct sortbyauthor* create_author_node(const char* author_name)
+{
     struct sortbyauthor* new_node = (struct sortbyauthor*)malloc(sizeof(struct sortbyauthor));
     if (!new_node) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
+        printf("Memory allocation failed.\n");
+        exit(EXIT_FAILURE);
     }
     strncpy(new_node->author_name, author_name, MAX_AUTHOR_NAME_LENGTH - 1);
     new_node->author_name[MAX_AUTHOR_NAME_LENGTH - 1] = '\0';
@@ -16,50 +16,36 @@ struct sortbyauthor* create_author_node(const char* author_name) {
     return new_node;
 }
 
-
-void add_author(struct sortbyauthor** head, const char* author_name) {
+void add_author(struct sortbyauthor** head, const char* author_name)
+{
     struct sortbyauthor* new_node = create_author_node(author_name);
-    if (!new_node) return;
-
-    if (!*head) {
-        *head = new_node;
-    } else {
-        struct sortbyauthor* current = *head;
-        while (current->next) {
-            current = current->next;
-        }
-        current->next = new_node;
-    }
+    new_node->next = *head;
+    *head = new_node;
+    printf("Author '%s' added successfully.\n", author_name);
 }
 
-void view_authors(struct sortbyauthor* head) {
-    if (!head) {
-        printf("No authors in the list.\n");
+void view_authors(struct sortbyauthor* head)
+{
+    if (!head)
+    {
+        printf("No authors available.\n");
         return;
     }
-
-    printf("List of Authors:\n");
-    struct sortbyauthor* current = head;
-    while (current) {
-        printf("%s\n", current->author_name);
-        current = current->next;
+    printf("\nList of Authors:\n");
+    while (head)
+    {
+        printf("- %s\n", head->author_name);
+        head = head->next;
     }
 }
-void display_author_menu() {
-    printf("Author Management Menu:\n");
-    printf("1. Add Author\n");
-    printf("2. View Authors\n");
-    printf("3. Sort Authors\n");
-    printf("4. Return to Main Menu\n");
-}
-void manage_authors() {
-    printf("Managing Authors...\n");
-}
-void split_list(struct sortbyauthor* head, struct sortbyauthor** first_half, struct sortbyauthor** second_half) {
+
+void split_list_author(struct sortbyauthor* head, struct sortbyauthor** first_half, struct sortbyauthor** second_half)
+{
     struct sortbyauthor* slow = head;
     struct sortbyauthor* fast = head->next;
 
-    while (fast && fast->next) {
+    while (fast && fast->next)
+    {
         slow = slow->next;
         fast = fast->next->next;
     }
@@ -69,33 +55,37 @@ void split_list(struct sortbyauthor* head, struct sortbyauthor** first_half, str
     slow->next = NULL;
 }
 
-struct sortbyauthor* merge_sorted_lists(struct sortbyauthor* left, struct sortbyauthor* right) {
+struct sortbyauthor* merge_sorted_lists_author(struct sortbyauthor* left, struct sortbyauthor* right)
+{
     if (!left) return right;
     if (!right) return left;
 
     struct sortbyauthor* result = NULL;
-
-    if (strcmp(left->author_name, right->author_name) <= 0) {
+    if (strcmp(left->author_name, right->author_name) <= 0)
+    {
         result = left;
-        result->next = merge_sorted_lists(left->next, right);
-    } else {
-        result = right;
-        result->next = merge_sorted_lists(left, right->next);
+        result->next = merge_sorted_lists_author(left->next, right);
     }
-
+    else
+    {
+        result = right;
+        result->next = merge_sorted_lists_author(left, right->next);
+    }
     return result;
 }
 
-void merge_sort(struct sortbyauthor** head) {
-    if (!*head || !(*head)->next) return;
+void merge_sort_author(struct sortbyauthor** head)
+{
+    if (!*head || !(*head)->next)
+    {
+        return;
+    }
 
-    struct sortbyauthor* first_half = NULL;
-    struct sortbyauthor* second_half = NULL;
+    struct sortbyauthor *first_half, *second_half;
+    split_list_author(*head, &first_half, &second_half);
 
-    split_list(*head, &first_half, &second_half);
+    merge_sort_author(&first_half);
+    merge_sort_author(&second_half);
 
-    merge_sort(&first_half);
-    merge_sort(&second_half);
-
-    *head = merge_sorted_lists(first_half, second_half);
+    *head = merge_sorted_lists_author(first_half, second_half);
 }

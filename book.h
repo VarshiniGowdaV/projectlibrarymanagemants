@@ -15,9 +15,7 @@ void add_book();
 void remove_book();
 void update_book();
 int search_book();
-void display_book_menu();
+void view_book_details();
 
-void save_books_to_file();
-void load_books_from_file();
 
 #endif // BOOK_H

@@ -20,7 +20,9 @@ add_executable(projectlibrarymanagements main.c
     sortbyauthor.c
     sortbybookname.c
     staff.c
-    student.c)
+    student.c
+    filehanding.h
+    filehanding.c)
 
 include(GNUInstallDirs)
 install(TARGETS projectlibrarymanagements

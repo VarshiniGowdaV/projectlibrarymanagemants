@@ -2,19 +2,20 @@
 #define RETURNEDBOOK_H
 
 struct returnedbook {
+    char book_name[100];
     char student_name[50];
     char usn[50];
     char dept[50];
-    char date[20];
+    int date[20];
+    int returned_by_student_id;
+    int student_id;
+    int book_id;
     struct returnedbook* next;
 };
 
 extern struct returnedbook* head;
 
-int record_returned_book(void);
-void print_returned_books(void);
-void display_returned_books_menu();
-void save_returned_books_to_file(void);
-void load_returned_books_from_file(void);
+int record_returned_book();
+void print_returned_books();
 
 #endif // RETURNEDBOOK_H
