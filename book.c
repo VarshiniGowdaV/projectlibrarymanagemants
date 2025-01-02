@@ -8,7 +8,7 @@
 // struct book* book_head = NULL;
 
 // File to store book data
-#define BOOKS_FILE "books.dat"
+#define BOOKS_FILE "books.txt"
 
 
 

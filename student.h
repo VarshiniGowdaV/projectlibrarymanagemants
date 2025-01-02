@@ -14,8 +14,11 @@ struct student {
 extern struct student* student_head;
 struct student* create_student_node(const char* name, int id, const char* dept);
 struct student* add_student(struct student* head, const char* name, int id, const char* department);
-void remove_student_from_file(int student_id);
-void update_student_in_file(int student_id, const char* new_name, const char* new_dept);
+void delete_student();
+void update_student();
+void search_student();
+// void remove_student_from_file(int student_id);
+// void update_student_in_file(int student_id, const char* new_name, const char* new_dept);
 void view_students(struct student* head);
 
 #endif // STUDENT_H

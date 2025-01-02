@@ -16,6 +16,9 @@ struct staff {
 
 // Function prototypes
 struct staff* add_staff(struct staff* head, const char* name, int id, const char* department, const char* position);
+void delete_staff(struct staff** head, int id);
+void update_staff(struct staff* head, int id);
+struct staff* search_staff(struct staff* head, int id); // Corrected the return type
 void view_staff(struct staff* head);
 
 #endif // STAFF_H

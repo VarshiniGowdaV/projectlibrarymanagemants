@@ -15,7 +15,7 @@ struct book* head = NULL;  // Head of the book list
 struct borrowedbook* borrowed_books_head = NULL;
 //struct returnedbook* returned_books_head = NULL;
  struct staff* staff_head = NULL;
- struct student* student_head = NULL;
+ //struct student* student_head = NULL;
 struct sortbyauthor* author_head = NULL;
 struct sortbybookname* book_name_head = NULL;
 
@@ -49,9 +49,16 @@ typedef enum {
 
     // User Management
     ADD_STUDENT,
+    DELETE_STUDENT,
+    UPDATE_STUDENT,
+    SEARCH_STUDENT,
     VIEW_STUDENTS,
     ADD_STAFF,
+    DELETE_STAFF,
+    UPDATE_STAFF,
+    SEARCH_STAFF,
     VIEW_STAFF,
+
 
     // Exit System
     EXIT
@@ -82,11 +89,17 @@ void display_menu() {
 
     printf("5. User Management:\n");
     printf("   14. Add Student\n");
-    printf("   15. View Students\n");
-    printf("   16. Add Staff\n");
-    printf("   17. View Staff\n");
+    printf("   15. delete student\n");
+    printf("   16. update student\n");
+    printf("   17. search student\n");
+    printf("   18. View Students\n");
+    printf("   19. Add Staff\n");
+    printf("   20. delete staff\n");
+    printf("   21. update staff\n");
+    printf("   22. search staff\n");
+    printf("   23. View Staff\n");
 
-    printf("18. Exit\n");
+    printf("24. Exit\n");
     printf("Enter your choice: ");
 }
 
@@ -253,6 +266,16 @@ int main_menu() {
             student_head = add_student(student_head, student_name, student_id, student_department);
             break;
         }
+        case DELETE_STUDENT:
+            delete_student();
+            break;
+
+        case UPDATE_STUDENT:
+            update_student();
+            break;
+        case SEARCH_STUDENT:
+            search_student();
+            break;
 
         case VIEW_STUDENTS:
             view_students(student_head);
@@ -261,18 +284,52 @@ int main_menu() {
         case ADD_STAFF: {
             char staff_name[100], staff_department[100], staff_position[100];
             int staff_id;
+
             printf("Enter staff name: ");
-            scanf(" %[s]", staff_name);
+            scanf(" %99[^\n]", staff_name);  // Capture name with spaces
+
             printf("Enter staff ID: ");
             scanf("%d", &staff_id);
+
             printf("Enter staff department: ");
-            scanf(" %[s]", staff_department);
+            scanf(" %99[^\n]", staff_department);  // Capture department with spaces
+
             printf("Enter staff position: ");
-            scanf(" %[s]", staff_position);
+            scanf(" %99[^\n]", staff_position);  // Capture position with spaces
+
             staff_head = add_staff(staff_head, staff_name, staff_id, staff_department, staff_position);
             break;
         }
 
+        case DELETE_STAFF: {
+            int staff_id;
+            printf("Enter staff ID to delete: ");
+            scanf("%d", &staff_id);
+            delete_staff(&staff_head, staff_id);
+            break;
+        }
+
+        case UPDATE_STAFF: {
+            int staff_id;
+            printf("Enter staff ID to update: ");
+            scanf("%d", &staff_id);
+            update_staff(staff_head, staff_id);
+            break;
+        }
+
+        case SEARCH_STAFF:
+        {
+            int staff_id;
+            printf("Enter staff ID to search: ");
+            scanf("%d", &staff_id);
+            struct staff* found_staff = search_staff(staff_head, staff_id);
+            if (found_staff != NULL) {
+                printf("Staff found: %s, %s\n", found_staff->name, found_staff->position);
+            } else {
+                printf("Staff not found.\n");
+            }
+            break;
+        }
         case VIEW_STAFF:
             view_staff(staff_head);
             break;
