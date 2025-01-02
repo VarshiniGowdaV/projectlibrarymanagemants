@@ -2,143 +2,120 @@
 #include <stdlib.h>
 #include <string.h>
 #include "book.h"
-struct book* books_head = NULL;
-void add_book()
-{
+
+// Define global variables
+// struct book* head = NULL;
+// struct book* book_head = NULL;
+
+// File to store book data
+#define BOOKS_FILE "books.dat"
+
+
+
+// Function to add a book
+void add_book() {
     struct book* new_book = (struct book*)malloc(sizeof(struct book));
-
-    printf("Enter book name: ");
-    scanf("%s", new_book->name);
-
-    printf("Enter author name: ");
-    scanf("%s", new_book->author);
-
-    printf("Enter total copies: ");
+    printf("Enter Book ID: ");
+    scanf("%d", &new_book->book_id);
+    getchar(); // Clear the newline character
+    printf("Enter Book Name: ");
+    fgets(new_book->name, sizeof(new_book->name), stdin);
+    new_book->name[strcspn(new_book->name, "\n")] = '\0'; // Remove newline character
+    printf("Enter Author Name: ");
+    fgets(new_book->author, sizeof(new_book->author), stdin);
+    new_book->author[strcspn(new_book->author, "\n")] = '\0'; // Remove newline character
+    printf("Enter Total Copies: ");
     scanf("%d", &new_book->total_copies);
-
     new_book->available_copies = new_book->total_copies;
-    new_book->next = NULL;
-    if (books_head == NULL)
-    {
-        books_head = new_book;
-    }
-    else
-    {
-        struct book* temp = books_head;
-        while (temp->next != NULL)
-        {
-            temp = temp->next;
-        }
-        temp->next = new_book;
-    }
 
-    printf("Book added successfully!\n");
+    new_book->next = head;
+    head = new_book;
+
+    save_books_to_file();
 }
-void remove_book()
-{
-    if (books_head == NULL)
-    {
-        printf("No books to remove.\n");
-        return;
+
+// Function to update a book's details
+void update_books() {
+    int book_id;
+    printf("Enter the Book ID to update: ");
+    scanf("%d", &book_id);
+    getchar(); // Clear the newline character
+
+    struct book* current = head;
+    while (current) {
+        if (current->book_id == book_id) {
+            printf("Updating Book: %s by %s\n", current->name, current->author);
+            printf("Enter New Total Copies: ");
+            scanf("%d", &current->total_copies);
+            getchar();
+            printf("Enter New Available Copies: ");
+            scanf("%d", &current->available_copies);
+            getchar();
+
+            save_books_to_file();
+            printf("Book updated successfully.\n");
+            return;
+        }
+        current = current->next;
     }
+    printf("Book with ID %d not found.\n", book_id);
+}
 
-    char book_name[50];
-    printf("Enter book name to remove: ");
-    scanf("%s", book_name);
+// Function to display all books
+void display_books() {
+    struct book* current = head;
+    printf("\nBooks List:\n");
+    printf("ID\tName\t\tAuthor\t\tTotal Copies\tAvailable Copies\n");
+    printf("---------------------------------------------------------------\n");
+    while (current) {
+        printf("%d\t%s\t%s\t%d\t\t%d\n", current->book_id, current->name, current->author, current->total_copies, current->available_copies);
+        current = current->next;
+    }
+}
 
-    struct book* temp = books_head;
+// Function to remove a book
+void remove_book(int book_id) {
+    struct book* current = head;
     struct book* prev = NULL;
-    if (strcmp(temp->name, book_name) == 0)
-    {
-        books_head = temp->next;
-        free(temp);
-        printf("Book removed successfully!\n");
-        return;
-    }
-    while (temp != NULL && strcmp(temp->name, book_name) != 0)
-    {
-        prev = temp;
-        temp = temp->next;
-    }
-    if (temp == NULL)
-    {
-        printf("Book not found.\n");
-        return;
-    }
-    prev->next = temp->next;
-    free(temp);
-    printf("Book removed successfully!\n");
-}
-void update_book()
-{
-    char book_name[50];
-    printf("Enter book name to update: ");
-    scanf("%s", book_name);
 
-    struct book* temp = books_head;
-
-    while (temp != NULL && strcmp(temp->name, book_name) != 0)
-    {
-        temp = temp->next;
-    }
-
-    if (temp == NULL)
-    {
-        printf("Book not found.\n");
-        return;
-    }
-
-    printf("Enter new book name: ");
-    scanf("%s", temp->name);
-
-    printf("Enter new author name: ");
-    scanf("%s", temp->author);
-
-    printf("Enter new total copies: ");
-    scanf("%d", &temp->total_copies);
-
-    temp->available_copies = temp->total_copies;
-
-    printf("Book details updated successfully!\n");
-}
-int search_book()
-{
-    char book_name[50];
-    printf("Enter book name to search: ");
-    scanf("%s", book_name);
-
-    struct book* temp = books_head;
-    int position = 1;
-
-    while (temp != NULL)
-    {
-        if (strcmp(temp->name, book_name) == 0)
-        {
-            printf("Book found at position %d.\n", position);
-            return position;
+    while (current) {
+        if (current->book_id == book_id) {
+            if (prev) {
+                prev->next = current->next;
+            } else {
+                head = current->next;
+            }
+            free(current);
+            save_books_to_file();
+            printf("Book with ID %d removed successfully.\n", book_id);
+            return;
         }
-        temp = temp->next;
-        position++;
+        prev = current;
+        current = current->next;
     }
-
-    printf("Book not found.\n");
-    return -1;
+    printf("Book with ID %d not found.\n", book_id);
 }
-void view_book_details()
-{
-    if (books_head == NULL)
-    {
-        printf("No books available.\n");
-        return;
-    }
 
-    struct book* temp = books_head;
-    while (temp != NULL)
-    {
-        printf("Book Name: %s\n", temp->name);
-        printf("Author: %s\n", temp->author);
-        printf("Total Copies: %d\n", temp->total_copies);
-        printf("Available Copies: %d\n\n", temp->available_copies);
-        temp = temp->next;
+// Function to search for a book by name
+struct book* search_book(const char* book_name) {
+    struct book* current = head;
+    while (current) {
+        if (strcmp(current->name, book_name) == 0) {
+            return current;
+        }
+        current = current->next;
     }
+    return NULL;
+}
+
+// Function to search for a book by ID
+struct book* search_book_by_id(int book_id) {
+    struct book* current = head;
+    while (current) {
+        if (current->book_id == book_id) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
 }

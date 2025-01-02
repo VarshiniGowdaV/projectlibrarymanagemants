@@ -1,87 +1,78 @@
-// borrowedbook.c (or any other .c file)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Include necessary headers
 #include "borrowedbook.h"
-#include "returnedbook.h"
-#include "staff.h"
+#include "book.h"
 #include "student.h"
-#include "sortbyauthor.h"
-#include "sortbybookname.h"
-#include "filehanding.h"
 
-// Declare global variables using extern
 extern struct borrowedbook* borrowed_books_head;
-extern struct returnedbook* returned_books_head;
-extern struct staff* staff_head;
-extern struct student* student_head;
-extern struct sortbyauthor* author_head;
-extern struct sortbybookname* book_name_head;
-
-extern int books_count;
-extern int students_count;
-extern int staff_count;
 extern int borrowed_count;
-extern int returned_count;
 
+extern struct book* search_book(const char* book_name);
 
-struct borrowedbook* add_borrowed_book(struct borrowedbook* head, int student_id, int book_id) {
-    struct borrowedbook* new_node = (struct borrowedbook*)malloc(sizeof(struct borrowedbook));
-    if (!new_node) {
-        printf("Memory allocation failed for borrowed book.\n");
-        return head;
-    }
+extern struct book* search_book_by_id(int book_id);
 
-    new_node->student_id = student_id;
-    new_node->book_id = book_id;
-    new_node->next = head;
-    head = new_node;
-    return head;
-}
-// Function to record a borrowed book
-int record_borrowed_book(void) {
-    // Allocate memory for the new borrowed book record
-    struct borrowedbook* new_borrowed_book = (struct borrowedbook*)malloc(sizeof(struct borrowedbook));
-    if (new_borrowed_book == NULL) {
-        printf("Memory allocation failed.\n");
-        return -1; // Return error code
-    }
+void record_borrowed_book() {
+    char student_name[100], book_name[100], borrowed_date[20];
+    int student_id;
 
-    // Prompt user for details about the borrowed book
     printf("Enter student name: ");
-    scanf(" %[^\n]", new_borrowed_book->student_name);
+    if (fgets(student_name, sizeof(student_name), stdin) == NULL) {
+        printf("Invalid student name input.\n");
+        return;
+    }
+    student_name[strcspn(student_name, "\n")] = '\0';
 
     printf("Enter book name: ");
-    scanf(" %[^\n]", new_borrowed_book->book_name);
+    if (fgets(book_name, sizeof(book_name), stdin) == NULL) {
+        printf("Invalid book name input.\n");
+        return;
+    }
+    book_name[strcspn(book_name, "\n")] = '\0';
 
     printf("Enter borrowed date (YYYY-MM-DD): ");
-    scanf(" %[^\n]", new_borrowed_book->borrowed_date);
+    if (fgets(borrowed_date, sizeof(borrowed_date), stdin) == NULL) {
+        printf("Invalid date input.\n");
+        return;
+    }
+    borrowed_date[strcspn(borrowed_date, "\n")] = '\0';
 
     printf("Enter student ID: ");
-    scanf("%d", &new_borrowed_book->borrowed_by_student_id);
-
-    // Initialize the next pointer
-    new_borrowed_book->next = NULL;
-
-    // Add the new record to the linked list
-    if (borrowed_books_head == NULL) {
-        borrowed_books_head = new_borrowed_book;
-    } else {
-        struct borrowedbook* current = borrowed_books_head;
-        while (current->next != NULL) {
-            current = current->next;
-        }
-        current->next = new_borrowed_book;
+    if (scanf("%d", &student_id) != 1) {
+        printf("Invalid student ID input.\n");
+        return;
     }
 
+
+    struct book* book = search_book(book_name);
+    if (book == NULL) {
+        printf("Book not found.\n");
+        return;
+    }
+
+    if (book->available_copies <= 0) {
+        printf("No available copies of the book.\n");
+        return;
+    }
+
+    struct borrowedbook* new_borrowed = malloc(sizeof(struct borrowedbook));
+    if (new_borrowed == NULL) {
+        printf("Memory allocation failed.\n");
+        return;
+    }
+
+    new_borrowed->student_id = student_id;
+    new_borrowed->book_id = book->book_id;
+    strncpy(new_borrowed->borrowed_date, borrowed_date, sizeof(new_borrowed->borrowed_date));
+    new_borrowed->next = borrowed_books_head;
+    borrowed_books_head = new_borrowed;
+
+    book->available_copies--;
+
     printf("Borrowed book recorded successfully.\n");
-    return 0; // Return success code
 }
 
-// Optional: Function to view all borrowed books
 void view_borrowed_books(void) {
     if (borrowed_books_head == NULL) {
         printf("No borrowed books recorded.\n");
@@ -91,12 +82,30 @@ void view_borrowed_books(void) {
     printf("Borrowed Books:\n");
     struct borrowedbook* current = borrowed_books_head;
     while (current != NULL) {
-        printf("Student Name: %s\n", current->student_name);
-        printf("Book Name: %s\n", current->book_name);
+        struct book* book = search_book_by_id(current->book_id);  // Get book by ID
+        if (book == NULL) {
+            printf("Error: Book with ID %d not found.\n", current->book_id);
+            current = current->next;
+            continue;
+        }
+
+        printf("Student ID: %d\n", current->student_id);
+        printf("Book Name: %s\n", book->name);
         printf("Borrowed Date: %s\n", current->borrowed_date);
-        printf("Student ID: %d\n", current->borrowed_by_student_id);
-        printf("\n");
+        printf("---------------------\n");
         current = current->next;
     }
 }
+struct borrowedbook* add_borrowed_book(struct borrowedbook* head, int student_id, int book_id) {
+    struct borrowedbook* new_book = (struct borrowedbook*)malloc(sizeof(struct borrowedbook));
+    if (!new_book) {
+        printf("Memory allocation failed.\n");
+        return head;
+    }
 
+    new_book->student_id = student_id;
+    new_book->book_id = book_id;
+    new_book->next = head;
+
+    return new_book;
+}

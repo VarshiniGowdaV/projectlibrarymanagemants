@@ -1,21 +1,27 @@
 #ifndef BOOK_H
 #define BOOK_H
 
+// Define the 'book' structure
 struct book {
-    char name[50];
-    char author[50];
+    int book_id;
+    char name[100];
+    char author[100];
     int total_copies;
     int available_copies;
     struct book* next;
 };
 
-extern struct book* books_head;
+extern struct book* head;
+extern struct book* book_head;
 
+// Function declarations
 void add_book();
-void remove_book();
-void update_book();
-int search_book();
-void view_book_details();
+void update_books();
+void display_books(void);
+void remove_book(int book_id);
+struct book* search_book(const char* book_name);
+struct book* search_book_by_id(int book_id);
+void remove_book(int book_id);
 
 
-#endif // BOOK_H
+#endif
