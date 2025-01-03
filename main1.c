@@ -11,15 +11,16 @@
 #include "sortbybookname.h"
 #include "filehanding.h"
 struct book* book_head = NULL;
-struct book* head = NULL;  // Head of the book list
+struct book* head = NULL;
 struct borrowedbook* borrowed_books_head = NULL;
-//struct returnedbook* returned_books_head = NULL;
- struct staff* staff_head = NULL;
- //struct student* student_head = NULL;
+struct returnedbook* returned_books_head = NULL;
+struct staff* staff_head = NULL;
+struct student* student_head = NULL;
 struct sortbyauthor* author_head = NULL;
 struct sortbybookname* book_name_head = NULL;
+extern int staff_count;
 
-int books_count = 0;
+//int books_count = 0;
 int students_count = 0;
 int staff_count = 0;
 int borrowed_count = 0;
@@ -35,6 +36,7 @@ typedef enum {
 
     // Borrowed/Returned Book Management
     RECORD_BORROWED_BOOK,
+    VIEW_BORROWED_BOOK,
     RECORD_RETURNED_BOOK,
     VIEW_RETURNED_BOOKS,
 
@@ -75,31 +77,32 @@ void display_menu() {
 
     printf("2. Borrowed/Returned Book Management:\n");
     printf("   6. Record Borrowed Book\n");
-    printf("   7. Record Returned Book\n");
-    printf("   8. View Returned Books\n");
+    printf("   7. view Borrowed book\n");
+    printf("   8. Record Returned Book\n");
+    printf("   9. View Returned Books\n");
 
     printf("3. Author Management:\n");
-    printf("   9. Add Author\n");
-    printf("   10. View Authors\n");
-    printf("   11. Sort Authors Alphabetically\n");
+    printf("   10. Add Author\n");
+    printf("   11. View Authors\n");
+    printf("   12. Sort Authors Alphabetically\n");
 
     printf("4. Sorting Operations:\n");
-    printf("   12. Add Book Name for Sorting\n");
-    printf("   13. View Books by Name\n");
+    printf("   13. Add Book Name for Sorting\n");
+    printf("   14. View Books by Name\n");
 
     printf("5. User Management:\n");
-    printf("   14. Add Student\n");
-    printf("   15. delete student\n");
-    printf("   16. update student\n");
-    printf("   17. search student\n");
-    printf("   18. View Students\n");
-    printf("   19. Add Staff\n");
-    printf("   20. delete staff\n");
-    printf("   21. update staff\n");
-    printf("   22. search staff\n");
-    printf("   23. View Staff\n");
+    printf("   15. Add Student\n");
+    printf("   16. delete student\n");
+    printf("   17. update student\n");
+    printf("   18. search student\n");
+    printf("   19. View Students\n");
+    printf("   20. Add Staff\n");
+    printf("   21. delete staff\n");
+    printf("   22. update staff\n");
+    printf("   23. search staff\n");
+    printf("   24. View Staff\n");
 
-    printf("24. Exit\n");
+    printf("25. Exit\n");
     printf("Enter your choice: ");
 }
 
@@ -108,12 +111,12 @@ int main_menu() {
     int login_status;
     int user_role;
 
-    // Load data from files
-    load_books_from_file(&books_count);
+   int books_count = 0;
+   load_books_from_file(&books_count);
     load_students_from_file();
     load_staff_from_file();
     load_borrowed_books_from_file();
-    load_returned_books_from_file();
+   load_returned_books_from_file();
 
     printf("Data loaded successfully!\n");
     printf("Books count: %d\n", books_count);
@@ -164,7 +167,9 @@ int main_menu() {
         switch ((MenuOption)choice) {
         case ADD_BOOK: {
             char book_name[100], author_name[100];
-            int total_copies, available_copies;
+            int  book_id,total_copies, available_copies;
+            printf("Enter book Id: ");
+            scanf("%d",&book_id);
             printf("Enter book name: ");
             scanf(" %[^\n]", book_name);
             printf("Enter author name: ");
@@ -189,19 +194,41 @@ int main_menu() {
             new_book->next = head;
             head = new_book;
 
-            save_books_to_file(head);
+            //save_books_to_file(head);
             printf("Book added successfully.\n");
             break;
         }
-        case UPDATE_BOOK:
-            update_books();
+        case UPDATE_BOOK: {
+            int book_id, total_copies, available_copies;
+            char new_name[100], new_author[100];
+
+            printf("Enter the book ID to update: ");
+            scanf("%d", &book_id);
+
+            printf("Enter the new book name: ");
+            scanf(" %[^\n]", new_name);  // Read string with spaces
+
+            printf("Enter the new author name: ");
+            scanf(" %[^\n]", new_author);  // Read string with spaces
+
+            printf("Enter the new total copies: ");
+            scanf("%d", &total_copies);
+
+            printf("Enter the new available copies: ");
+            scanf("%d", &available_copies);
+
+            update_book_record(book_id, new_name, new_author, total_copies, available_copies);
+
             break;
+        }
+
 
         case REMOVE_BOOK: {
             int book_id;
             printf("Enter book ID to remove: ");
             scanf("%d", &book_id);
-            remove_book(book_id);
+            remove_book(&head, book_id);  // Pass the address of 'head' to update the list
+            display_books(head);          // Pass 'head' to display the updated list
             break;
         }
         case SEARCH_BOOK: {
@@ -217,10 +244,13 @@ int main_menu() {
             break;
         }
         case VIEW_BOOKS:
-            display_books();
+            display_books(head);  // Pass 'head' here as well
             break;
         case RECORD_BORROWED_BOOK:
             record_borrowed_book();
+            break;
+        case VIEW_BORROWED_BOOK:
+            view_borrowed_books();
             break;
         case RECORD_RETURNED_BOOK:
             record_returned_book();
@@ -258,24 +288,52 @@ int main_menu() {
             char student_name[100], student_department[100];
             int student_id;
             printf("Enter student name: ");
-            scanf(" %[s]", student_name);
+            scanf(" %[^\n]", student_name);
             printf("Enter student ID: ");
             scanf("%d", &student_id);
             printf("Enter student department: ");
-            scanf(" %[s]", student_department);
+            scanf(" %[^\n]", student_department);
+
+            // Ensure student_head is updated correctly
             student_head = add_student(student_head, student_name, student_id, student_department);
             break;
         }
-        case DELETE_STUDENT:
-            delete_student();
+        case DELETE_STUDENT: {
+            int student_id;
+            printf("Enter student ID to delete: ");
+            scanf("%d", &student_id);
+            delete_student(student_head, student_id);
             break;
+        }
 
-        case UPDATE_STUDENT:
-            update_student();
+        case UPDATE_STUDENT: {
+            int student_id;
+            char new_name[100], new_department[100];
+
+            printf("Enter student ID to update: ");
+            scanf("%d", &student_id);
+            printf("Enter new student name: ");
+            scanf(" %[^\n]", new_name);
+            printf("Enter new department: ");
+            scanf(" %[^\n]", new_department);
+            update_student(student_head, student_id, new_name, new_department);
             break;
-        case SEARCH_STUDENT:
-            search_student();
+        }
+
+        case SEARCH_STUDENT: {
+            int student_id;
+            printf("Enter student ID to search: ");
+            scanf("%d", &student_id);
+
+            struct student* found_student = search_student(student_head, student_id);
+
+            if (found_student != NULL) {
+                printf("Student found: %s\n", found_student->name);
+            } else {
+                printf("Student not found.\n");
+            }
             break;
+        }
 
         case VIEW_STUDENTS:
             view_students(student_head);
@@ -317,25 +375,26 @@ int main_menu() {
             break;
         }
 
-        case SEARCH_STAFF:
-        {
+        case SEARCH_STAFF: {
             int staff_id;
             printf("Enter staff ID to search: ");
             scanf("%d", &staff_id);
+
             struct staff* found_staff = search_staff(staff_head, staff_id);
             if (found_staff != NULL) {
-                printf("Staff found: %s, %s\n", found_staff->name, found_staff->position);
+                // Use 'position' instead of 'staff_position'
+                printf("Staff found: %s, %s\n", found_staff->staff_name, found_staff->position);  // Correct field names
             } else {
                 printf("Staff not found.\n");
             }
             break;
         }
+
         case VIEW_STAFF:
             view_staff(staff_head);
             break;
 
         case EXIT:
-            // Save data before exiting
             save_books_to_file(head);
             save_students_to_file(student_head);
             save_staff_to_file(staff_head);

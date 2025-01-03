@@ -16,17 +16,14 @@ extern struct borrowedbook* borrowed_books_head;
 extern struct returnedbook* returned_books_head;
 
 // Load books from file
-#include "filehanding.h"
-#include "book.h"
-
-void load_books_from_file(int* books_count) {  // Add the argument here to match the declaration
+void load_books_from_file(int* books_count) {
     FILE* file = fopen("books.txt", "r");
     if (!file) {
         perror("Error opening books file");
         return;
     }
 
-    *books_count = 0;  // Initialize book count
+    *books_count = 0;
     struct book* new_book;
     while (1) {
         new_book = malloc(sizeof(struct book));
@@ -40,7 +37,7 @@ void load_books_from_file(int* books_count) {  // Add the argument here to match
                    &new_book->book_id, new_book->name, new_book->author,
                    &new_book->total_copies, &new_book->available_copies) != 5) {
             free(new_book);
-            break;  // Exit loop on invalid or incomplete data
+            break;
         }
 
         new_book->next = book_head;
@@ -50,7 +47,6 @@ void load_books_from_file(int* books_count) {  // Add the argument here to match
 
     fclose(file);
 }
-
 
 // Save books to file
 void save_books_to_file(struct book* head) {
@@ -79,11 +75,11 @@ void load_students_from_file() {
 
     while (1) {
         char name[100], department[50];
-        int id;
-        if (fscanf(file, "%99s %d %49s", name, &id, department) != 3) {
+        int student_id;
+        if (fscanf(file, "%99s %d %49s", name, &student_id, department) != 3) {
             break;
         }
-        student_head = add_student(student_head, name, id, department);
+        student_head = add_student(student_head, name, student_id, department);
     }
 
     fclose(file);
@@ -98,7 +94,7 @@ void save_students_to_file(struct student* head) {
     }
 
     for (struct student* current = head; current; current = current->next) {
-        fprintf(file, "%s %d %s\n", current->name, current->id, current->department);
+        fprintf(file, "%s %d %s\n", current->name, current->student_id, current->department);
     }
 
     fclose(file);
@@ -113,12 +109,12 @@ void load_staff_from_file() {
     }
 
     while (1) {
-        char name[100], department[50], position[50];
-        int id;
-        if (fscanf(file, "%99s %d %49s %49s", name, &id, department, position) != 4) {
+        char staff_name[100], department[50], position[50];
+        int staff_id;
+        if (fscanf(file, "%99s %d %49s %49s", staff_name, &staff_id, department, position) != 4) {
             break;
         }
-        staff_head = add_staff(staff_head, name, id, department, position);
+        staff_head = add_staff(staff_head, staff_name, staff_id, department, position);
     }
 
     fclose(file);
@@ -133,7 +129,7 @@ void save_staff_to_file(struct staff* head) {
     }
 
     for (struct staff* current = head; current; current = current->next) {
-        fprintf(file, "%s %d %s %s\n", current->name, current->id, current->department, current->position);
+        fprintf(file, "%s %d %s %s\n", current->staff_name, current->staff_id, current->department, current->position);
     }
 
     fclose(file);
@@ -183,10 +179,11 @@ void load_returned_books_from_file() {
 
     while (1) {
         int student_id, book_id;
-        if (fscanf(file, "%d %d", &student_id, &book_id) != 2) {
+        char returned_date[20];
+        if (fscanf(file, "%d %d %19s", &student_id, &book_id, returned_date) != 3) {
             break;
         }
-        returned_books_head = add_returned_book(returned_books_head, student_id, book_id);
+        returned_books_head = add_returned_book(returned_books_head, student_id, book_id, returned_date);
     }
 
     fclose(file);
@@ -201,7 +198,7 @@ void save_returned_books_to_file(struct returnedbook* head) {
     }
 
     for (struct returnedbook* current = head; current; current = current->next) {
-        fprintf(file, "%d %d\n", current->student_id, current->book_id);
+        fprintf(file, "%d %d %s\n", current->student_id, current->book_id, current->returned_date);
     }
 
     fclose(file);

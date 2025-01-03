@@ -3,101 +3,113 @@
 #include <string.h>
 #include "staff.h"
 
-// Function to add a staff member
+//int staff_count = 0;
+//struct staff* staff_head = NULL;
+
 struct staff* add_staff(struct staff* head, const char* name, int id, const char* department, const char* position) {
-    struct staff* new_staff = (struct staff*)malloc(sizeof(struct staff));
+    struct staff* new_staff = malloc(sizeof(struct staff));
     if (!new_staff) {
-        printf("Memory allocation failed\n");
+        printf("Memory allocation failed.\n");
         return head;
     }
-
-    new_staff->id = id;
-    strncpy(new_staff->name, name, MAX_NAME_LENGTH);
-    strncpy(new_staff->department, department, MAX_DEPT_LENGTH);
-    strncpy(new_staff->position, position, MAX_POSITION_LENGTH);
+    strcpy(new_staff->staff_name, name);
+    strcpy(new_staff->department, department);
+    strcpy(new_staff->position, position);
+    new_staff->staff_id = id;
     new_staff->next = head;
-    head = new_staff;
-
-    return head;
+    return new_staff;
 }
 
-// Function to delete a staff member by ID
 void delete_staff(struct staff** head, int id) {
-    struct staff* current = *head;
-    struct staff* prev = NULL;
-
-    while (current) {
-        if (current->id == id) {
-            if (prev) {
-                prev->next = current->next;
-            } else {
-                *head = current->next;
-            }
-            free(current);
-            printf("Staff with ID %d deleted successfully.\n", id);
-            return;
-        }
-        prev = current;
-        current = current->next;
+    struct staff *temp = *head, *prev = NULL;
+    while (temp && temp->staff_id != id) {
+        prev = temp;
+        temp = temp->next;
     }
-    printf("Staff with ID %d not found.\n", id);
+    if (!temp) {
+        printf("Staff with ID %d not found.\n", id);
+        return;
+    }
+    if (prev)
+        prev->next = temp->next;
+    else
+        *head = temp->next;
+    free(temp);
+    printf("Staff deleted successfully.\n");
 }
-
-// Function to update a staff member's details
 void update_staff(struct staff* head, int id) {
-    struct staff* current = head;
-    while (current) {
-        if (current->id == id) {
-            printf("Updating staff member: %s\n", current->name);
+    struct staff* temp = head;
 
-            // Update staff name
-            printf("Enter new name: ");
-            fgets(current->name, MAX_NAME_LENGTH, stdin);
-            current->name[strcspn(current->name, "\n")] = '\0';  // Remove newline character
-
-            // Update staff ID (use scanf for integer input)
-            printf("Enter new ID: ");
-            scanf("%d", &current->id);
-            getchar();  // Clear the newline character left by scanf
-
-            // Update staff department
-            printf("Enter new department: ");
-            fgets(current->department, MAX_DEPT_LENGTH, stdin);
-            current->department[strcspn(current->department, "\n")] = '\0';  // Remove newline character
-
-            // Update staff position
-            printf("Enter new position: ");
-            fgets(current->position, MAX_POSITION_LENGTH, stdin);
-            current->position[strcspn(current->position, "\n")] = '\0';  // Remove newline character
-
-            printf("Staff details updated successfully.\n");
-            return;
-        }
-        current = current->next;
+    // Traverse the linked list to find the staff by ID
+    while (temp && temp->staff_id != id) {
+        temp = temp->next;
     }
-    printf("Staff with ID %d not found.\n", id);
+    if (!temp) {
+        printf("Staff with ID %d not found.\n", id);
+        return;
+    }
+    printf("Enter new name: ");
+    scanf(" %[^\n]", temp->staff_name);
+    printf("Enter new department: ");
+    scanf(" %[^\n]", temp->department);
+    printf("Enter new position: ");
+    scanf(" %[^\n]", temp->position);
+
+    printf("Staff updated successfully in memory.\n");
+
+    // Open the file to update the staff data
+    FILE* file = fopen("staff.txt", "r+");
+    if (!file) {
+        perror("Error opening staff file");
+        return;
+    }
+
+    struct staff file_staff;
+    long pos;
+    int found = 0;
+
+    // Read through the file to find the record and update it
+    while (fscanf(file, "%d,%99[^,],%99[^,],%99[^,]\n",
+                  &file_staff.staff_id, file_staff.staff_name,
+                  file_staff.department, file_staff.position) != EOF) {
+        pos = ftell(file);  // Save the position to update the correct record later
+
+        if (file_staff.staff_id == id) {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found) {
+        // Move file pointer to the position of the staff record and update it
+        fseek(file, pos - sizeof(file_staff), SEEK_SET);
+        fprintf(file, "%d,%s,%s,%s\n", temp->staff_id, temp->staff_name, temp->department, temp->position);
+        printf("Staff updated successfully in file.\n");
+    } else {
+        printf("Staff ID %d not found in file.\n", id);
+    }
+
+    fclose(file);  // Close the file
 }
-// Function to search for a staff member by ID
+
 struct staff* search_staff(struct staff* head, int id) {
-    struct staff* current = head;
-    while (current) {
-        if (current->id == id) {
-            return current;
-        }
-        current = current->next;
+    struct staff* temp = head;
+    while (temp && temp->staff_id != id) {
+        temp = temp->next;
     }
-    return NULL;
+    return temp;
 }
 
-// Function to view all staff members
 void view_staff(struct staff* head) {
-    struct staff* current = head;
-    printf("\nStaff List:\n");
-    printf("ID\tName\t\tDepartment\tPosition\n");
-    printf("----------------------------------------------\n");
-
-    while (current) {
-        printf("%d\t%s\t%s\t%s\n", current->id, current->name, current->department, current->position);
-        current = current->next;
+    struct staff* temp = head;
+    if (!temp) {
+        printf("No staff records available.\n");
+        return;
+    }
+    printf("Staff Records:\n");
+    while (temp) {
+        printf("ID: %d, Name: %s, Department: %s, Position: %s\n", temp->staff_id, temp->staff_name, temp->department, temp->position);
+        temp = temp->next;
     }
 }
+

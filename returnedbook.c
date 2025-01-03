@@ -3,105 +3,69 @@
 #include <string.h>
 #include "returnedbook.h"
 
-struct returnedbook* returned_books_head = NULL;
+// Define the global variable for the list of returned books (Only define it here)
+//struct returnedbook* returned_books_head = NULL;
 
-struct returnedbook* add_returned_book(struct returnedbook* head, int student_id, int book_id) {
-    struct returnedbook* new_returned = (struct returnedbook*)malloc(sizeof(struct returnedbook));
-    if (!new_returned) {
+// Function to add a returned book to the list
+struct returnedbook* add_returned_book(struct returnedbook* head, int student_id, int book_id, const char* date) {
+    struct returnedbook* new_returned_book = (struct returnedbook*)malloc(sizeof(struct returnedbook));
+    if (!new_returned_book) {
         printf("Memory allocation failed.\n");
         return head;
     }
-
-    new_returned->student_id = student_id;
-    new_returned->book_id = book_id;
-    new_returned->next = NULL;
-
-    if (head == NULL) {
-        return new_returned;
-    }
-
-    struct returnedbook* temp = head;
-    while (temp->next != NULL) {
-        temp = temp->next;
-    }
-    temp->next = new_returned;
-
-    return head;
+    new_returned_book->student_id = student_id;
+    new_returned_book->book_id = book_id;
+    strcpy(new_returned_book->returned_date, date);
+    new_returned_book->next = head;
+    return new_returned_book;
 }
 
+// Function to record a returned book (adds to the list)
 void record_returned_book() {
-    struct returnedbook* new_returned = (struct returnedbook*)malloc(sizeof(struct returnedbook));
-    if (!new_returned) {
-        printf("Memory allocation failed.\n");
-        return;
-    }
+    int student_id, book_id;
+    char returned_date[MAX_DATE_LENGTH];
 
-    printf("Enter book name: ");
-    scanf(" %[s\n]", new_returned->book_name);
-
-    printf("Enter student name: ");
-    scanf(" %[s\n]", new_returned->student_name);
-
-    printf("Enter student USN: ");
-    scanf(" %[s\n]", new_returned->usn);
-
-    printf("Enter department: ");
-    scanf(" %[s\n]", new_returned->dept);
-
-    printf("Enter book ID: ");
-    scanf("%d", &new_returned->book_id);
-
+    // Collect input data
     printf("Enter student ID: ");
-    scanf("%d", &new_returned->student_id);
+    scanf("%d", &student_id);
+    printf("Enter book ID: ");
+    scanf("%d", &book_id);
+    printf("Enter return date (YYYY-MM-DD): ");
+    scanf("%s", returned_date);
 
-    new_returned->next = NULL;
-
-    if (returned_books_head == NULL) {
-        returned_books_head = new_returned;
-    } else {
-        struct returnedbook* temp = returned_books_head;
-        while (temp->next != NULL) {
-            temp = temp->next;
-        }
-        temp->next = new_returned;
-    }
-
-    printf("Returned book recorded successfully!\n");
+    // Add the returned book to the list
+    returned_books_head = add_returned_book(returned_books_head, student_id, book_id, returned_date);
+    printf("Returned book recorded successfully.\n");
 }
 
+// Function to view all returned books
 void view_returned_books() {
-    struct returnedbook* current = returned_books_head;
-    if (current == NULL) {
+    struct returnedbook* temp = returned_books_head;
+
+    if (!temp) {
         printf("No returned books available.\n");
         return;
     }
 
-    printf("Returned Books:\n");
-    while (current != NULL) {
-        printf("Book ID: %d,"
-               " Name: %s, Student ID: %d, Student Name: %s, USN: %s, Department: %s\n",
-               current->book_id, current->book_name, current->student_id, current->student_name, current->usn, current->dept);
-        current = current->next;
+    printf("Returned Books Records:\n");
+    while (temp) {
+        printf("Returned ID: %d, Student ID: %d, Book ID: %d, Return Date: %s\n", temp->returned_id, temp->student_id, temp->book_id, temp->returned_date);
+        temp = temp->next;
     }
 }
 
+// Function to print all returned books in a nice format
 void print_returned_books() {
     struct returnedbook* temp = returned_books_head;
 
-    if (temp == NULL) {
-        printf("No returned books to display.\n");
+    if (!temp) {
+        printf("No returned books to print.\n");
         return;
     }
 
-    printf("Detailed Returned Books Information:\n");
-    while (temp != NULL) {
-        printf("Book Name: %s\n", temp->book_name);
-        printf("Student Name: %s\n", temp->student_name);
-        printf("USN: %s\n", temp->usn);
-        printf("Department: %s\n", temp->dept);
-        printf("Book ID: %d\n", temp->book_id);
-        printf("Student ID: %d\n", temp->student_id);
-        printf("-------------------------------\n");
+    printf("Returned Books:\n");
+    while (temp) {
+        printf("Returned ID: %d, Student ID: %d, Book ID: %d, Return Date: %s\n", temp->returned_id, temp->student_id, temp->book_id, temp->returned_date);
         temp = temp->next;
     }
 }
